@@ -14,6 +14,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Harden repository validation with negative-path tests and stricter released-skill discovery.
 - Require repository tests and complete Skills CLI discovery before CI or tagged releases pass.
 - Replace the unavailable skills.sh dynamic badge with a stable badge linked to the published skill page.
+- Update pinned GitHub Actions to Node 24 compatible releases.
 
 ## [0.1.0] - 2026-09-10
 
