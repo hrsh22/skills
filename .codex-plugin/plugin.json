@@ -1,0 +1,38 @@
+{
+  "name": "hrsh22-skills",
+  "version": "0.1.0",
+  "description": "A collection of focused agent skills by Harsh Gupta.",
+  "author": {
+    "name": "Harsh Gupta",
+    "email": "harsh.gupta2211@gmail.com",
+    "url": "https://hrsh.dev"
+  },
+  "homepage": "https://github.com/hrsh22/skills#readme",
+  "repository": "https://github.com/hrsh22/skills",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "codex",
+    "multi-agent",
+    "model-routing",
+    "developer-tools"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Harsh's Agent Skills",
+    "shortDescription": "Focused workflows for deliberate agent engineering.",
+    "longDescription": "A growing collection of focused skills for reliable agent workflows. The first skill, Codex Staff, coordinates Sol execution with selective Astra judgment.",
+    "developerName": "Harsh Gupta",
+    "category": "Productivity",
+    "capabilities": [
+      "Multi-agent coordination",
+      "Model and effort routing"
+    ],
+    "websiteURL": "https://hrsh.dev",
+    "defaultPrompt": [
+      "$codex-staff coordinate this task.",
+      "$codex-staff staff this implementation with proportionate models.",
+      "$codex-staff use specialist judgment only where it matters."
+    ]
+  }
+}

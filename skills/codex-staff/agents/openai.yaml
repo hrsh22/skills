@@ -1,0 +1,7 @@
+interface:
+  display_name: "Codex Staff"
+  short_description: "Coordinate Sol and Astra subagents"
+  default_prompt: "Use $codex-staff to coordinate this task with appropriately routed Sol and Astra subagents."
+
+policy:
+  allow_implicit_invocation: false

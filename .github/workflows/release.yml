@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.13"
+
+      - name: Install validators
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+
+      - name: Validate release identity
+        run: |
+          python scripts/validate_repo.py --tag "$GITHUB_REF_NAME"
+          for skill in skills/*; do
+            agentskills validate "$skill"
+          done
+
+      - name: Package source
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output "dist/hrsh22-skills-${GITHUB_REF_NAME}.zip" HEAD
+          sha256sum "dist/hrsh22-skills-${GITHUB_REF_NAME}.zip" > "dist/hrsh22-skills-${GITHUB_REF_NAME}.zip.sha256"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --prerelease --title "$GITHUB_REF_NAME"
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+          fi
