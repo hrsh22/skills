@@ -34,7 +34,8 @@ jobs:
         run: |
           mkdir -p dist
           git archive --format=zip --output "dist/hrsh22-skills-${GITHUB_REF_NAME}.zip" HEAD
-          sha256sum "dist/hrsh22-skills-${GITHUB_REF_NAME}.zip" > "dist/hrsh22-skills-${GITHUB_REF_NAME}.zip.sha256"
+          cd dist
+          sha256sum "hrsh22-skills-${GITHUB_REF_NAME}.zip" > "hrsh22-skills-${GITHUB_REF_NAME}.zip.sha256"
 
       - name: Create GitHub release
         env:

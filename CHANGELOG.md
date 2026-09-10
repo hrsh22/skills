@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- Make release checksums portable when assets are downloaded outside the workflow's `dist/` directory.
+
 ## [0.1.0] - 2026-09-10
 
 ### Added
