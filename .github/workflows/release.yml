@@ -20,15 +20,50 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
       - name: Install validators
         run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
 
-      - name: Validate release identity
+      - name: Run repository tests
+        run: python -m unittest discover -s tests
+
+      - name: Validate release identity and repository invariants
+        run: python scripts/validate_repo.py --tag "$GITHUB_REF_NAME"
+
+      - name: Validate Agent Skills specification
         run: |
-          python scripts/validate_repo.py --tag "$GITHUB_REF_NAME"
-          for skill in skills/*; do
-            agentskills validate "$skill"
+          for skill_file in skills/*/SKILL.md; do
+            agentskills validate "$(dirname "$skill_file")"
           done
+
+      - name: Verify Skills CLI discovery
+        shell: bash
+        run: |
+          npx --yes skills@1.5.25 add . --list | tee /tmp/skills-list.txt
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          ansi_escape = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+          output = ansi_escape.sub("", Path("/tmp/skills-list.txt").read_text())
+          listed = {
+              line.strip().strip("│").strip()
+              for line in output.splitlines()
+          }
+          expected = {
+              skill_file.parent.name
+              for skill_file in Path("skills").glob("*/SKILL.md")
+          }
+          missing = sorted(expected - listed)
+          if missing:
+              raise SystemExit(
+                  "Skills CLI did not list: " + ", ".join(missing)
+              )
+          PY
 
       - name: Package source
         run: |

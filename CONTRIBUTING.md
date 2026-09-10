@@ -22,6 +22,7 @@ python3 -m venv .venv
 Run the repository and Agent Skills validators:
 
 ```bash
+.venv/bin/python -m unittest discover -s tests
 .venv/bin/python scripts/validate_repo.py
 .venv/bin/agentskills validate skills/codex-staff
 npx skills@1.5.25 add . --list

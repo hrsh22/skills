@@ -16,7 +16,7 @@ When a requested model, effort, spawning capability, or concurrency slot is unav
 
 ## Activation
 
-Apply this workflow only when the user explicitly invokes `$codex-staff`, and only to the task in which it was invoked. New tasks require a new invocation. `$codex-staff off` stops active staff when the runtime permits, preserves useful findings already returned, and resumes direct work.
+Apply this workflow only when the user explicitly invokes `$codex-staff`, and only to the task in which it was invoked. New tasks require a new invocation. `$codex-staff off` ends staffing for this invocation: stop only agents created by this invocation when the runtime permits, preserve useful findings already returned, and continue the task directly. Report any agents that could not be stopped. Create no further staff for this task unless the user invokes `$codex-staff` again.
 
 If another team workflow is active for the same task, replace its routing rules with this workflow unless the user explicitly asks to combine them. Preserve the user's scope, permissions, and requested outcome.
 

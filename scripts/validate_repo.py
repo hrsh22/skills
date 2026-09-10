@@ -40,13 +40,16 @@ def load_frontmatter(path: Path) -> dict[str, object]:
     return value
 
 
-def validate(expected_tag: str | None) -> list[str]:
+def validate(expected_tag: str | None, root: Path | None = None) -> list[str]:
+    root = ROOT if root is None else Path(root)
     failures: list[str] = []
-    manifest_path = ROOT / ".codex-plugin" / "plugin.json"
+    manifest_path = root / ".codex-plugin" / "plugin.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return [f"{manifest_path}: {exc}"]
+    if not isinstance(manifest, dict):
+        return [f"{manifest_path}: manifest must be a JSON object"]
 
     if manifest.get("name") != "hrsh22-skills":
         fail("unexpected Codex plugin identifier", failures)
@@ -61,8 +64,35 @@ def validate(expected_tag: str | None) -> list[str]:
     if skills_value != "./skills/":
         fail("plugin must expose the canonical ./skills/ directory", failures)
 
-    skills_root = ROOT / "skills"
-    skill_files = sorted(skills_root.glob("*/SKILL.md"))
+    skills_root = root / "skills"
+    skill_files: list[Path] = []
+    try:
+        skill_entries = sorted(skills_root.iterdir())
+    except OSError as exc:
+        fail(f"{skills_root}: {exc}", failures)
+        skill_entries = []
+
+    for entry in skill_entries:
+        relative_entry = entry.relative_to(root)
+        if not entry.is_dir():
+            fail(f"{relative_entry}: skills/ may contain only released skill directories", failures)
+            continue
+
+        skill_file = entry / "SKILL.md"
+        if not skill_file.is_file():
+            fail(f"{relative_entry}: released skill directory must contain SKILL.md", failures)
+            continue
+        skill_files.append(skill_file)
+
+    if skills_root.is_dir():
+        for nested_skill_file in sorted(skills_root.rglob("SKILL.md")):
+            relative_skill_file = nested_skill_file.relative_to(skills_root)
+            if len(relative_skill_file.parts) > 2:
+                fail(
+                    f"{nested_skill_file.relative_to(root)}: nested skill layouts are not allowed",
+                    failures,
+                )
+
     if not skill_files:
         fail("no released skills found under skills/", failures)
 
@@ -71,51 +101,58 @@ def validate(expected_tag: str | None) -> list[str]:
         try:
             metadata = load_frontmatter(skill_file)
         except (OSError, ValueError, yaml.YAMLError) as exc:
-            fail(f"{skill_file.relative_to(ROOT)}: {exc}", failures)
+            fail(f"{skill_file.relative_to(root)}: {exc}", failures)
             continue
 
         name = metadata.get("name")
         if name != skill_dir.name:
-            fail(f"{skill_file.relative_to(ROOT)}: name must match parent directory", failures)
+            fail(f"{skill_file.relative_to(root)}: name must match parent directory", failures)
         if not isinstance(name, str) or not NAME_PATTERN.fullmatch(name):
-            fail(f"{skill_file.relative_to(ROOT)}: invalid skill name", failures)
+            fail(f"{skill_file.relative_to(root)}: invalid skill name", failures)
         if metadata.get("license") != "MIT":
-            fail(f"{skill_file.relative_to(ROOT)}: expected license: MIT", failures)
+            fail(f"{skill_file.relative_to(root)}: expected license: MIT", failures)
 
         openai_yaml = skill_dir / "agents" / "openai.yaml"
         try:
             openai_data = yaml.safe_load(openai_yaml.read_text(encoding="utf-8"))
         except (OSError, yaml.YAMLError) as exc:
-            fail(f"{openai_yaml.relative_to(ROOT)}: {exc}", failures)
+            fail(f"{openai_yaml.relative_to(root)}: {exc}", failures)
             continue
         if not isinstance(openai_data, dict) or not isinstance(openai_data.get("interface"), dict):
-            fail(f"{openai_yaml.relative_to(ROOT)}: missing interface mapping", failures)
+            fail(f"{openai_yaml.relative_to(root)}: missing interface mapping", failures)
             continue
 
         default_prompt = openai_data["interface"].get("default_prompt")
         if not isinstance(default_prompt, str) or not default_prompt.startswith(f"Use ${name} "):
             fail(
-                f"{openai_yaml.relative_to(ROOT)}: default_prompt must explicitly invoke ${name}",
+                f"{openai_yaml.relative_to(root)}: default_prompt must explicitly invoke ${name}",
                 failures,
             )
 
-    plugin_prompts = manifest.get("interface", {}).get("defaultPrompt", [])
-    if not isinstance(plugin_prompts, list) or not plugin_prompts:
-        fail("plugin must provide at least one default prompt", failures)
-    elif any(not isinstance(prompt, str) or not prompt.startswith("$codex-staff ") for prompt in plugin_prompts):
-        fail("every plugin default prompt must explicitly invoke $codex-staff", failures)
+    plugin_interface = manifest.get("interface")
+    if not isinstance(plugin_interface, dict):
+        fail("plugin interface must be a JSON object", failures)
+    else:
+        plugin_prompts = plugin_interface.get("defaultPrompt")
+        if not isinstance(plugin_prompts, list) or not plugin_prompts:
+            fail("plugin must provide at least one default prompt", failures)
+        elif any(
+            not isinstance(prompt, str) or not prompt.startswith("$codex-staff ")
+            for prompt in plugin_prompts
+        ):
+            fail("every plugin default prompt must explicitly invoke $codex-staff", failures)
 
     repository_text = [
         path
-        for path in ROOT.rglob("*")
+        for path in root.rglob("*")
         if path.is_file()
-        and not IGNORED_DIRECTORIES.intersection(path.relative_to(ROOT).parts)
+        and not IGNORED_DIRECTORIES.intersection(path.relative_to(root).parts)
         and path.suffix in {".md", ".json", ".yaml", ".yml", ".py"}
     ]
     unfinished_marker = "[" + "TODO:"
     for path in repository_text:
         if unfinished_marker in path.read_text(encoding="utf-8"):
-            fail(f"{path.relative_to(ROOT)}: unfinished scaffold placeholder", failures)
+            fail(f"{path.relative_to(root)}: unfinished scaffold placeholder", failures)
 
     return failures
 

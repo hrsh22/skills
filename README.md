@@ -5,7 +5,7 @@ Focused workflows for deliberate agent engineering.
 [![CI](https://github.com/hrsh22/skills/actions/workflows/ci.yml/badge.svg)](https://github.com/hrsh22/skills/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/hrsh22/skills?display_name=tag)](https://github.com/hrsh22/skills/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![skills.sh](https://skills.sh/b/hrsh22/skills)](https://skills.sh/hrsh22/skills)
+[![skills.sh](https://img.shields.io/badge/skills.sh-codex--staff-111827)](https://skills.sh/hrsh22/skills/codex-staff)
 
 This repository contains small, inspectable agent skills that solve specific workflow problems. Each released skill has an explicit compatibility boundary and shares one source between standalone installation and plugin packaging.
 
@@ -47,7 +47,7 @@ Select **Sol Medium** as the main model in Codex, then invoke the skill with a t
 $codex-staff implement the account export flow and verify it end to end
 ```
 
-To stop its team workflow for the current task:
+To stop staff created by the current invocation and continue the task directly:
 
 ```text
 $codex-staff off
@@ -89,7 +89,7 @@ skills/
 .codex-plugin/plugin.json
 ```
 
-`skills/` contains released skills verified for the Codex plugin. Draft, experimental, or host-incompatible work does not belong there.
+`skills/` contains released skills targeting the documented Codex runtime. See [validation and evidence](docs/validation.md) for verified behavior and installation paths. Draft, experimental, or host-incompatible work does not belong there.
 
 ## Contributing
 
